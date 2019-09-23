@@ -16,13 +16,13 @@ curl -i -H "Content-Type: application/json" -X POST -d '{"path": "/my_path/my_di
 curl -X GET http://localhost:5000/tasks
 
 <b>Get a specific task json by ID</b><br>
-curl -X GET http://localhost:5000/tasks/<id>
+curl -X GET http://localhost:5000/tasks/my_task_id
 
 <b>Abort a running task</b><br>
-curl -X DELETE http://localhost:5000/tasks/<id>
+curl -X DELETE http://localhost:5000/tasks/my_task_id
 
 <b>Delete a non-running task from registry</b><br>
-curl -X DELETE http://localhost:5000/tasks/<id>
+curl -X DELETE http://localhost:5000/tasks/my_task_id
 
 <b>Task fields</b><br>
 {<br>
