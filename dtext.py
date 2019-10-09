@@ -212,6 +212,56 @@ def get_detect_im(im, detected_rects, prune=True):
         cv2.rectangle(im_out, (r.xlt,r.ylt),(r.xrb,r.yrb), (0,255,0))
     return im_out
 
+def run_detection_on_files(model,pthresh,files,verbose=False,monitor=None):
+
+    if len(files)<1: 
+        print('file list is empty')
+        return []
+
+    ntot,ndetect=0,0
+    r1=384
+    r2,r3=int((2.**0.25)*r1),int((2.**-0.25)*r1)
+    mdl=model
+    res_csv=[]       
+    
+    for file in files:
+        if not os.path.isfile(file):
+            print ("{} is not a file.".format(file))
+            res_csv+=[{'infile':file,'outfile':'NA'}]
+            continue      
+        if verbose:
+            print("Detecting text in: "+file)
+        try:        
+            im=cv2.imread(file)
+            im_gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY) / 255.
+        except cv2.error as e:
+            res_csv+=[{'infile':file,'outfile':'NA'}]
+            continue
+        #pyplot.imshow(im)
+        found_rects,p=detect(im_gray,r1,mdl,pthresh,verbose)
+        found_rects1,p1=detect(im_gray,r2,mdl,pthresh,verbose)
+        found_rects+=found_rects1; p=max(p,p1)
+        found_rects1,p1=detect(im_gray,r3,mdl,pthresh,verbose)
+        found_rects+=found_rects1; p=max(p,p1)
+        ntot+=1
+        if len(found_rects)>0:
+            im_out=get_detect_im(im,found_rects)
+            outfil=file.replace('.png','')+'.dtext.png'
+            if verbose:
+                print('writing '+outfil)
+            cv2.imwrite(outfil,im_out)
+            res_csv+=[{'infile':file,'outfile':outfil,'text_present':1,"maxp":"{:1.2f}".format(p)}]
+            ndetect+=1
+        else:
+            #cv2.imwrite(dir+"out/"+f,im)
+            res_csv+=[{'infile':file,'outfile':file, 'text_present':0,"maxp":"{:1.2f}".format(p)}]
+        if monitor is not None:
+            if monitor['status']=='aborting': break
+            
+    print('Detected text in {} out of {} files.'.format(ndetect,ntot))
+    return res_csv
+
+    
 """
 Run detection on a directory of png images.
 Write detected images and a .csv summary to dir_out.
